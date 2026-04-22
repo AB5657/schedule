@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>週間スケジュール</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #c8a96e;
+    --accent2: #7eb8a0;
+    --accent3: #e07070;
+    --text: #e8e4dc;
+    --text-muted: #888;
+    --text-dim: #555;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .header { text-align: center; margin-bottom: 48px; }
+  .header h1 {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .header h2 { font-size: 26px; font-weight: 500; letter-spacing: 0.05em; }
+  .header p { margin-top: 8px; font-size: 13px; color: var(--text-muted); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    max-width: 1100px;
+    margin: 0 auto 40px;
+  }
+
+  .day-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .day-header {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .day-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .day-col.weekend .day-header { background: #1e1e18; }
+  .day-col.weekend .day-name { color: var(--accent); }
+
+  .blocks { padding: 8px 6px; display: flex; flex-direction: column; gap: 5px; }
+
+  .block {
+    border-radius: 5px;
+    padding: 7px 8px;
+    line-height: 1.5;
+    border-left: 2px solid transparent;
+  }
+
+  .block-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+
+  .block-title { font-weight: 500; font-size: 11px; color: var(--text); }
+  .block-note { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .tag { font-size: 9px; color: var(--accent); margin-left: 4px; font-family: 'DM Mono', monospace; }
+
+  .cat-work  { background: #1f2020; border-color: #444; }
+  .cat-tennis{ background: #1a1f20; border-color: #6aabcc; }
+  .cat-meet  { background: #1f1d14; border-color: var(--accent); }
+  .cat-vol   { background: #1f1a1a; border-color: var(--accent3); }
+  .cat-cook  { background: #1f1a1f; border-color: #b08ec0; }
+  .cat-rest  { background: #181818; border-color: #333; }
+  .cat-gym   { background: #1a1a1f; border-color: #7070c8; }
+
+  .cat-tennis .block-title { color: #6aabcc; }
+  .cat-meet .block-title   { color: var(--accent); }
+  .cat-vol .block-title    { color: var(--accent3); }
+  .cat-cook .block-title   { color: #b08ec0; }
+  .cat-gym .block-title    { color: #7070c8; }
+
+  .legend {
+    max-width: 1100px;
+    margin: 0 auto 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  .memo {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+  }
+
+  .memo h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .memo-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+  .memo-list li {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.6;
+  }
+
+  .memo-list li::before { content: '—'; position: absolute; left: 0; color: var(--text-dim); }
+  .memo-list li strong { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>Weekly Routine</h2>
+  <p>仕事 8:30〜18:00 ／ 起床 6〜7時 ／ ジム月曜休み</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#444"></div>仕事（合間に転職活動）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6aabcc"></div>テニス</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c8a96e"></div>出会いの場・探す</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e07070"></div>ボランティア</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#b08ec0"></div>料理教室</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7070c8"></div>ジム</div>
+</div>
+
+<div class="grid">
+
+  <!-- 月 -->
+  <div class="day-col">
+    <div class="day-header"><div class="day-name">Mon</div></div>
+    <div class="blocks">
+      <div class="block cat-rest">
+        <div class="block-time">6:00〜8:15</div>
+        <div class="block-title">準備・朝食</div>
+      </div>
+      <div class="block cat-work">
+        <div class="block-time">8:30〜18:00</div>
+        <div class="block-title">仕事</div>
+        <div class="block-note">合間に求人チェック・書類作成</div>
+      </div>
+      <div class="block cat-meet">
+        <div class="block-time">18:30〜20:00</div>
+        <div class="block-title">Tennisoff チェック</div>
+        <div class="block-note">週末オフ会を探して申込む</div>
+      </div>
+      <div class="block cat-rest">
+        <div class="block-time">20:00〜</div>
+        <div class="block-title">休息・入浴</div>
+        <div class="block-note">ジム定休日</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 火 -->
+  <div class="day-col">
+    <div class="day-header"><div class="day-name">Tue</div></div>
+    <div class="blocks">
+      <div class="block cat-rest">
+        <div class="block-time">6:00〜8:15</div>
+        <div class="block-title">準備・朝食</div>
+      </div>
+      <div class="block cat-work">
+        <div class="block-time">8:30〜18:00</div>
+        <div class="block-title">仕事</div>
+        <div class="block-note">合間に応募・面接日程調整</div>
+      </div>
+      <div class="block cat-gym">
+        <div class="block-time">18:30〜20:00</div>
+        <div class="block-title">ジム</div>
+        <div class="block-note">若見えキープのための投資</div>
+      </div>
+      <div class="block cat-rest">
+        <div class="block-time">20:30〜</div>
+        <div class="block-title">休息・入浴</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 水 -->
+  <div class="day-col">
+    <div class="day-header"><div class="day-name">Wed</div></div>
+    <div class="blocks">
+      <div class="block cat-rest">
+        <div class="block-time">6:00〜8:15</div>
+        <div class="block-title">準備・朝食</div>
+      </div>
+      <div class="block cat-work">
+        <div class="block-time">8:30〜18:00</div>
+        <div class="block-title">仕事</div>
+        <div class="block-note">合間に転職活動・面接対策</div>
+      </div>
+      <div class="block cat-meet">
+        <div class="block-time">18:30〜20:00</div>
+        <div class="block-title">アクティボ チェック</div>
+        <div class="block-note">週末ボランティアを探す</div>
+      </div>
+      <div class="block cat-rest">
+        <div class="block-time">20:00〜</div>
+        <div class="block-title">休息</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 木 -->
+  <div class="day-col">
+    <div class="day-header"><div class="day-name">Thu</div></div>
+    <div class="blocks">
+      <div class="block cat-rest">
+        <div class="block-time">6:00〜8:15</div>
+        <div class="block-title">準備・朝食</div>
+      </div>
+      <div class="block cat-work">
+        <div class="block-time">8:30〜18:00</div>
+        <div class="block-title">仕事</div>
+        <div class="block-note">合間に転職活動</div>
+      </div>
+      <div class="block cat-gym">
+        <div class="block-time">18:30〜20:00</div>
+        <div class="block-title">ジム</div>
+      </div>
+      <div class="block cat-rest">
+        <div class="block-time">20:30〜</div>
+        <div class="block-title">休息・入浴</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 金 -->
+  <div class="day-col">
+    <div class="day-header"><div class="day-name">Fri</div></div>
+    <div class="blocks">
+      <div class="block cat-rest">
+        <div class="block-time">6:00〜8:15</div>
+        <div class="block-title">準備・朝食</div>
+      </div>
+      <div class="block cat-work">
+        <div class="block-time">8:30〜18:00</div>
+        <div class="block-title">仕事</div>
+        <div class="block-note">合間に転職活動・夕方面接</div>
+      </div>
+      <div class="block cat-gym">
+        <div class="block-time">18:30〜20:00</div>
+        <div class="block-title">ジム</div>
+      </div>
+      <div class="block cat-rest">
+        <div class="block-time">20:30〜</div>
+        <div class="block-title">週末準備・休息</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 土 -->
+  <div class="day-col weekend">
+    <div class="day-header"><div class="day-name">Sat</div></div>
+    <div class="blocks">
+      <div class="block cat-meet">
+        <div class="block-time">9:00〜11:00</div>
+        <div class="block-title">Tennisoff オフ会</div>
+        <div class="block-note">月2回を目標に参加</div>
+      </div>
+      <div class="block cat-cook">
+        <div class="block-time">13:00〜16:00</div>
+        <div class="block-title">料理教室</div>
+        <div class="block-note">月1回・単発レッスンから</div>
+      </div>
+      <div class="block cat-meet">
+        <div class="block-time">18:00〜21:00</div>
+        <div class="block-title">社会人サークル等</div>
+        <div class="block-note">Peatix等で探す。月1〜2回</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日 -->
+  <div class="day-col weekend">
+    <div class="day-header"><div class="day-name">Sun</div></div>
+    <div class="blocks">
+      <div class="block cat-tennis">
+        <div class="block-time">9:00〜11:00</div>
+        <div class="block-title">テニスレッスン<span class="tag">第2・第4</span></div>
+        <div class="block-note">まず再開することが最優先</div>
+      </div>
+      <div class="block cat-vol">
+        <div class="block-time">9:00〜13:00</div>
+        <div class="block-title">ボランティア<span class="tag">第1・第3</span></div>
+        <div class="block-note">アクティボで月2回ペースに</div>
+      </div>
+      <div class="block cat-rest">
+        <div class="block-time">14:00〜</div>
+        <div class="block-title">自由・休息</div>
+        <div class="block-note">翌週の準備など</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="memo">
+  <h3>ポイント</h3>
+  <ul class="memo-list">
+    <li><strong>今週の一手：</strong>Tennisoff.netで近くのオフ会を1個探して申し込む。これだけでいい。</li>
+    <li><strong>テニスレッスン：</strong>第2・第4日曜固定。最近行けてないなら、次の回から必ず出る。</li>
+    <li><strong>ボランティア：</strong>第1・第3日曜にアクティボで月2回再開。テニスと被らない週に入れる。</li>
+    <li><strong>料理教室：</strong>土曜の単発レッスン月1回から試す。自然に仲良くなる分には問題なし。</li>
+    <li><strong>転職活動：</strong>業務中メインで十分。夜や週末に無理して詰め込まなくていい。</li>
+    <li><strong>年齢の伝え方：</strong>「37なんだけどよく若く見られるんだよね」と自分でネタにして先手を打つ。</li>
+    <li><strong>マッチングアプリ：</strong>転職決まったら本格始動。今は出会える場の習慣づくりが先。</li>
+  </ul>
+</div>
+
+</body>
+</html>
